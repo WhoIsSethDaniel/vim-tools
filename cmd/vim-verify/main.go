@@ -42,7 +42,7 @@ func dirsToCheck() []string {
 
 func filesToCheck(extra []string) []string {
 	check := []string{
-		tools.PluginsFilePath(), tools.DisabledFilePath(),
+		tools.PluginsFilePath(),
 	}
 	check = append(check, extra...)
 	return check

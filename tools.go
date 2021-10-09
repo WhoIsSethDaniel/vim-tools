@@ -1,7 +1,7 @@
 package tools
 
 import (
-	"bufio"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -18,10 +18,12 @@ var Filesys = afero.NewOsFs()
 
 // Plugin ....
 type Plugin struct {
-	Name        string
-	URL         string // not always a url
-	Colorscheme bool
-	Enabled     bool
+	Name        string `json:"name"`
+	URL         string `json:"url"` // not always a url
+	CleanName   string `json:"clean_name"`
+	ConfigFile  string `json:"config_file"`
+	Colorscheme bool   `json:"colorscheme"`
+	Enabled     bool   `json:"enabled"`
 }
 
 // Plugins ....
@@ -54,14 +56,9 @@ func ConfigFileDir() string {
 	return filepath.Join(configHome, "nvim/lua/plugins") //nolint:gocritic // use of / is fine
 }
 
-// DisabledFilePath ....
-func DisabledFilePath() string {
-	return filepath.Join(MetadataDir(), "disabled")
-}
-
 // PluginsFilePath ....
 func PluginsFilePath() string {
-	return filepath.Join(MetadataDir(), "all")
+	return filepath.Join(MetadataDir(), "all.json")
 }
 
 // AllPluginsPath ....
@@ -73,41 +70,6 @@ func AllPluginsPath() string {
 	return filepath.Join(configHome, "nvim/lua/all.lua") //nolint:gocritic // use of / is fine
 }
 
-func readPluginsFile(file string, disabled []string) (Plugins, error) {
-	p := Plugins{}
-	f, err := Filesys.Open(file)
-	if err != nil {
-		return nil, fmt.Errorf("unable to load plugin file: %w", err)
-	}
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		elem := strings.Split(scanner.Text(), " ")
-		if len(elem) < 3 {
-			continue
-		}
-		p.Add(elem[2])
-	}
-	for _, name := range disabled {
-		pt := p[name]
-		pt.Enabled = false
-		p[name] = pt
-	}
-	return p, nil
-}
-
-func readDisabledFile(file string) ([]string, error) {
-	disabled := []string{}
-	f, err := Filesys.Open(file)
-	if err != nil {
-		return nil, fmt.Errorf("unable to load disabled file: %w", err)
-	}
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		disabled = append(disabled, scanner.Text())
-	}
-	return disabled, nil
-}
-
 // RebuildConfig ....
 func (p Plugins) RebuildConfig() error {
 	names := p.SortedNames()
@@ -115,7 +77,7 @@ func (p Plugins) RebuildConfig() error {
 	allPluginsPath := AllPluginsPath()
 	allLuaPlugins, _ := afero.TempFile(Filesys, filepath.Dir(allPluginsPath), filepath.Base(allPluginsPath))
 	defer allLuaPlugins.Close()
-	defer os.Remove(allLuaPlugins.Name())
+	defer Filesys.Remove(allLuaPlugins.Name())
 
 	fmt.Fprint(allLuaPlugins, "-- load plugins\n")
 	fmt.Fprint(allLuaPlugins, "vim.cmd[[\n")
@@ -136,12 +98,12 @@ func (p Plugins) RebuildConfig() error {
 		plugin := p[name]
 		fi, err := Filesys.Stat(plugin.ConfigFilePath())
 		if err != nil {
-			panic(fmt.Sprintf("Cannot stat config file for '%s': %s", name, err))
+			return fmt.Errorf("cannot stat config file for '%s': %w", name, err)
 		}
 		if fi.Size() == 0 || plugin.IsDisabled() {
-			fmt.Fprintf(allLuaPlugins, "-- require'plugins.%s'\n", plugin.CleanName())
+			fmt.Fprintf(allLuaPlugins, "-- require'plugins.%s'\n", plugin.CleanName)
 		} else {
-			fmt.Fprintf(allLuaPlugins, "require'plugins.%s'\n", plugin.CleanName())
+			fmt.Fprintf(allLuaPlugins, "require'plugins.%s'\n", plugin.CleanName)
 		}
 	}
 
@@ -160,76 +122,28 @@ func (p Plugins) SortedNames() []string {
 	return sortedPlugins
 }
 
-// Read ....
-func Read() (Plugins, error) {
-	disabled, err := readDisabledFile(DisabledFilePath())
-	if err != nil {
-		return nil, err
-	}
-
-	p, err := readPluginsFile(PluginsFilePath(), disabled)
-	if err != nil {
-		return nil, err
-	}
-
-	return p, nil
-}
-
-func (p Plugins) writePluginsFile(file string) error {
-	tplugins, err := afero.TempFile(Filesys, filepath.Dir(file), filepath.Base(file))
-	if err != nil {
-		return fmt.Errorf("failed to create temp file for all plugins file: %w", err)
-	}
-	defer tplugins.Close()
-	defer Filesys.Remove(tplugins.Name())
-
-	sortedPlugins := p.SortedNames()
-	for _, name := range sortedPlugins {
-		plugin := p[name]
-		fmt.Fprintf(tplugins, "git clone %s\n", plugin.URL)
-	}
-
-	if err := Filesys.Rename(tplugins.Name(), file); err != nil {
-		return fmt.Errorf("failed to rename temp file for all plugins file: %w", err)
-	}
-	return nil
-}
-
-func (p Plugins) writeDisabledFile(file string) error {
-	tdisabled, err := afero.TempFile(Filesys, filepath.Dir(file), filepath.Base(file))
-	if err != nil {
-		return fmt.Errorf("failed to create temp disabled file: %w", err)
-	}
-	defer tdisabled.Close()
-	defer Filesys.Remove(tdisabled.Name())
-
-	disabledPlugins := []string{}
-	for name, plugin := range p {
-		if !plugin.Enabled {
-			disabledPlugins = append(disabledPlugins, name)
-		}
-	}
-
-	sort.Strings(disabledPlugins)
-	for _, name := range disabledPlugins {
-		fmt.Fprint(tdisabled, name+"\n")
-	}
-
-	if err := Filesys.Rename(tdisabled.Name(), file); err != nil {
-		return fmt.Errorf("failed to rename temp disabled file: %w", err)
-	}
-	return nil
-}
-
 // Add ....
 func (p Plugins) Add(url string) Plugin {
 	key := filepath.Base(strings.Split(url, ":")[1])
-	_, err := os.Stat(filepath.Join(PluginDir(), key, "colors"))
-	if errors.Is(err, fs.ErrNotExist) {
-		p[key] = Plugin{Name: key, URL: url, Enabled: true, Colorscheme: false}
-	} else {
-		p[key] = Plugin{Name: key, URL: url, Enabled: true, Colorscheme: true}
+	plugin := Plugin{
+		Name:        key,
+		URL:         url,
+		Enabled:     true,
+		Colorscheme: false,
 	}
+	plugin.CleanName = strings.Map(func(c rune) rune {
+		if c == '.' {
+			return '-'
+		}
+		return c
+	}, key)
+	plugin.ConfigFile = fmt.Sprintf("%s.lua", plugin.CleanName)
+
+	_, err := Filesys.Stat(filepath.Join(PluginDir(), key, "colors"))
+	if !errors.Is(err, fs.ErrNotExist) {
+		plugin.Colorscheme = true
+	}
+	p[key] = plugin
 	return p[key]
 }
 
@@ -238,27 +152,44 @@ func (p Plugins) Remove(plugin Plugin) {
 	delete(p, plugin.Name)
 }
 
+// Read ....
+func Read() (Plugins, error) {
+	pf, err := Filesys.Open(PluginsFilePath())
+	if err != nil {
+		return nil, fmt.Errorf("failed to open plugins file: %w", err)
+	}
+	pfjson, err := afero.ReadAll(pf)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read plugins file json: %w", err)
+	}
+	plugins := Plugins{}
+	if err := json.Unmarshal(pfjson, &plugins); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal plugins json: %w", err)
+	}
+	return plugins, nil
+}
+
 // Write ....
 func (p Plugins) Write() error {
-	if err := p.writePluginsFile(PluginsFilePath()); err != nil {
-		return fmt.Errorf("failed to write plugins file: %w", err)
+	pjson, err := json.MarshalIndent(p, "", "  ")
+	if err != nil {
+		return fmt.Errorf("conversion to JSON failed: %w", err)
 	}
-	return p.writeDisabledFile(DisabledFilePath())
+	pf, err := afero.TempFile(Filesys, MetadataDir(), filepath.Base(PluginsFilePath()))
+	defer pf.Close()
+	if err != nil {
+		return fmt.Errorf("failed to create temp file for plugins file: %w", err)
+	}
+	fmt.Fprintf(pf, "%s", pjson)
+	if err := Filesys.Rename(pf.Name(), PluginsFilePath()); err != nil {
+		return fmt.Errorf("rename of plugins file failed: %w", err)
+	}
+	return nil
 }
 
 // ConfigFilePath ....
 func (plugin Plugin) ConfigFilePath() string {
-	return fmt.Sprintf("%s.lua", filepath.Join(ConfigFileDir(), plugin.CleanName()))
-}
-
-// CleanName ....
-func (plugin Plugin) CleanName() string {
-	return strings.Map(func(c rune) rune {
-		if c == '.' {
-			return '-'
-		}
-		return c
-	}, plugin.Name)
+	return filepath.Join(ConfigFileDir(), plugin.ConfigFile)
 }
 
 // Disable ....
