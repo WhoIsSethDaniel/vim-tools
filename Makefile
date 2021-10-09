@@ -14,6 +14,11 @@ $(BUILD_TARGETS): build/%:
 
 $(PKG_TARGETS): ./cmd/%: build/%
 
+.PHONY: install
+install: all
+	$(GO) install $(PKG_TARGETS)
+
+
 .PHONY: $(TARGETS)
 $(TARGETS): %: build/%
 
