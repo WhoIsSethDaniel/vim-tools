@@ -15,7 +15,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	plugins, _ := tools.Read()
+	plugins, err := tools.Read()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to read plugins file: %s\n", err)
+		os.Exit(1)
+	}
 	for _, arg := range os.Args[1:] {
 		fmt.Print(" - cloning\n")
 		git := exec.Command("git", "clone", arg)

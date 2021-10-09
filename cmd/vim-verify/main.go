@@ -66,7 +66,7 @@ func pluginsOnDisk() int {
 func main() {
 	plugins, err := tools.Read()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to read all plugins file: %s", err)
+		fmt.Fprintf(os.Stderr, "Failed to read plugins file: %s", err)
 		os.Exit(1)
 	}
 	numPlugins := len(plugins)
