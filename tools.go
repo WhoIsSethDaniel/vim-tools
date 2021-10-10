@@ -114,7 +114,7 @@ func (p Plugins) RebuildConfig() error {
 
 // SortedNames ....
 func (p Plugins) SortedNames() []string {
-	sortedPlugins := []string{}
+	sortedPlugins := make([]string, 0, len(p))
 	for name := range p {
 		sortedPlugins = append(sortedPlugins, name)
 	}

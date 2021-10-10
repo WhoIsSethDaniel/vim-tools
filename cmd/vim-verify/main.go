@@ -30,13 +30,13 @@ func dirsToCheck() []string {
 		fmt.Fprintf(os.Stderr, "Cannot determine home directory: %s\n", err)
 		os.Exit(1)
 	}
-	check := []string{}
-	check = append(check,
+	check := []string{
 		filepath.Join(dataHome, "nvim"),
 		filepath.Join(dataHome, "nvim/lua"),
 		filepath.Join(dataHome, "nvim/lua/plugins"),
 		filepath.Join(dataHome, "nvim/pack/git-plugins/opt"),
-		filepath.Join(home, ".cache/nvim"))
+		filepath.Join(home, ".cache/nvim"),
+	}
 	return check
 }
 
