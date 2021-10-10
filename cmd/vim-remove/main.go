@@ -34,26 +34,26 @@ func main() {
 
 		fmt.Print(" - removing directory\n")
 		if err := os.RemoveAll(pluginDir); err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to remove plugin %s dir: %s", arg, err)
+			fmt.Fprintf(os.Stderr, "Failed to remove plugin %s dir: %s\n", arg, err)
 			os.Exit(1)
 		}
 
 		fmt.Print(" - removing config file\n")
 		if err := os.Remove(plugin.ConfigFilePath()); err != nil {
-			fmt.Printf("Failed to remove plugin %s config file: %s", arg, err)
+			fmt.Printf("Failed to remove plugin %s config file: %s\n", arg, err)
 			os.Exit(1)
 		}
 		plugins.Remove(plugin)
 	}
 
-	fmt.Print(" - rewrite files")
+	fmt.Print(" - rewrite files\n")
 	if err := plugins.Write(); err != nil {
 		fmt.Fprintf(os.Stderr, "%s", err)
 		os.Exit(1)
 	}
 
 	if err := plugins.RebuildConfig(); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to rebuild configuration: %s", err)
+		fmt.Fprintf(os.Stderr, "Failed to rebuild configuration: %s\n", err)
 		os.Exit(1)
 	}
 }

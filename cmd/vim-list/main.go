@@ -10,7 +10,7 @@ import (
 func main() {
 	plugins, err := tools.Read()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to read all plugin file: %s", err)
+		fmt.Fprintf(os.Stderr, "Failed to read all plugin file: %s\n", err)
 		os.Exit(1)
 	}
 	pluginNames := plugins.SortedNames()

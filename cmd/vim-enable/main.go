@@ -11,7 +11,7 @@ import (
 func main() {
 	plugins, _ := tools.Read()
 	if len(os.Args) <= 1 {
-		fmt.Fprintf(os.Stderr, "Usage: %s plugin [plugin ...]", filepath.Base(os.Args[0]))
+		fmt.Fprintf(os.Stderr, "Usage: %s plugin [plugin ...]\n", filepath.Base(os.Args[0]))
 		os.Exit(1)
 	}
 	for _, arg := range os.Args[1:] {

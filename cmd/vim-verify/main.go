@@ -22,12 +22,12 @@ func check(check []string) []string {
 func dirsToCheck() []string {
 	dataHome, ok := os.LookupEnv("XDG_CONFIG_HOME")
 	if !ok {
-		fmt.Fprint(os.Stderr, "XDG_CONFIG_HOME does no seem to be set")
+		fmt.Fprint(os.Stderr, "XDG_CONFIG_HOME does no seem to be set\n")
 		os.Exit(1)
 	}
 	home, err := os.UserHomeDir()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Cannot determine home directory: %s", err)
+		fmt.Fprintf(os.Stderr, "Cannot determine home directory: %s\n", err)
 		os.Exit(1)
 	}
 	check := []string{}
@@ -52,7 +52,7 @@ func pluginsOnDisk() int {
 	cnt := 0
 	ent, err := os.ReadDir(tools.PluginDir())
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Cannot read plugin directory: %s", err)
+		fmt.Fprintf(os.Stderr, "Cannot read plugin directory: %s\n", err)
 		os.Exit(1)
 	}
 	for _, dir := range ent {
@@ -66,7 +66,7 @@ func pluginsOnDisk() int {
 func main() {
 	plugins, err := tools.Read()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to read plugins file: %s", err)
+		fmt.Fprintf(os.Stderr, "Failed to read plugins file: %s\n", err)
 		os.Exit(1)
 	}
 	numPlugins := len(plugins)

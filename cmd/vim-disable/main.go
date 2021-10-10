@@ -11,7 +11,7 @@ import (
 func main() {
 	plugins, _ := tools.Read()
 	if len(os.Args) <= 1 {
-		fmt.Fprintf(os.Stderr, "Usage: %s plugin [plugin ...]", filepath.Base(os.Args[0]))
+		fmt.Fprintf(os.Stderr, "Usage: %s plugin [plugin ...]\n", filepath.Base(os.Args[0]))
 		os.Exit(1)
 	}
 	for _, arg := range os.Args[1:] {
@@ -29,7 +29,7 @@ func main() {
 	}
 
 	if err := plugins.RebuildConfig(); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to rebuild configuration: %s", err)
+		fmt.Fprintf(os.Stderr, "Failed to rebuild configuration: %s\n", err)
 		os.Exit(1)
 	}
 }

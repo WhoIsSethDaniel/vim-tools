@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -13,35 +14,30 @@ import (
 )
 
 func main() {
+	var versionCheck, build bool
+
+	flag.BoolVar(&versionCheck, "h", false, "Check version of each installed plugin")
+	flag.BoolVar(&build, "b", false, "Clone all defined plugins.")
+	flag.Parse()
+
 	plugins, err := tools.Read()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to read plugins file: %s", err)
+		fmt.Fprintf(os.Stderr, "Failed to read plugins file: %s\n", err)
 		os.Exit(1)
 	}
 
-	// probably should use flags if this gets any more complicated
-	versionCheck := false
-	args := []string{}
-	for _, arg := range os.Args[1:] {
-		if strings.HasPrefix(arg, "-") {
-			if arg != "-h" {
-				fmt.Fprintf(os.Stderr, "Invalid option: %s\n", arg)
-				fmt.Fprintf(os.Stderr, "usage: %s [-h] [plugin ...]\n", filepath.Base(os.Args[0]))
+	var args []string
+	if flag.NArg() == 0 {
+		args = plugins.SortedNames()
+	} else {
+		args = flag.Args()
+		for _, arg := range args {
+			_, ok := plugins[arg]
+			if !ok {
+				fmt.Fprintf(os.Stderr, "No such plugin %s\n", arg)
 				os.Exit(1)
 			}
-			versionCheck = true
-			continue
 		}
-		_, ok := plugins[arg]
-		if !ok {
-			fmt.Fprintf(os.Stderr, "No such plugin %s\n", arg)
-			os.Exit(1)
-		}
-		args = append(args, arg)
-	}
-
-	if len(args) == 0 {
-		args = plugins.SortedNames()
 	}
 
 	runGit := func(pluginName string, args ...string) (string, error) {
@@ -61,7 +57,20 @@ func main() {
 	defer close(errPrint)
 	for _, pluginName := range args {
 		wg.Add(1)
-		if versionCheck {
+		if build {
+			go func(pluginName string) {
+				defer wg.Done()
+				plugin := plugins[pluginName]
+				cmd := exec.Command("git", "clone", plugin.URL) //nolint:gosec not a function
+				cmd.Dir = tools.PluginDir()
+				out, err := cmd.CombinedOutput()
+				if err != nil {
+					errPrint <- fmt.Errorf("%s: failed to run git: %s: %w", pluginName, strings.TrimRight(string(out), "\n"), err)
+					return
+				}
+				toPrint <- fmt.Sprintf("%s: cloned", pluginName)
+			}(pluginName)
+		} else if versionCheck {
 			go func(pluginName string) {
 				defer wg.Done()
 				out, err := runGit(pluginName, "rev-parse", "HEAD")

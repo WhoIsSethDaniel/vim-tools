@@ -40,13 +40,13 @@ func main() {
 		}
 	}
 
-	fmt.Print(" - rewrite files")
+	fmt.Print(" - rewrite files\n")
 	if err := plugins.Write(); err != nil {
 		fmt.Fprintf(os.Stderr, "%s", err)
 		os.Exit(1)
 	}
 	if err := plugins.RebuildConfig(); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to rebuild configuration: %s", err)
+		fmt.Fprintf(os.Stderr, "Failed to rebuild configuration: %s\n", err)
 		os.Exit(1)
 	}
 }

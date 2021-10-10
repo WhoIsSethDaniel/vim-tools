@@ -10,11 +10,11 @@ import (
 func main() {
 	plugins, err := tools.Read()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to read plugin information: %s", err)
+		fmt.Fprintf(os.Stderr, "Failed to read plugin information: %s\n", err)
 		os.Exit(1)
 	}
 	if err := plugins.RebuildConfig(); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to rebuild configuration: %s", err)
+		fmt.Fprintf(os.Stderr, "Failed to rebuild configuration: %s\n", err)
 		os.Exit(1)
 	}
 }
