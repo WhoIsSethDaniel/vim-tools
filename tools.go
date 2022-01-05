@@ -91,7 +91,7 @@ func (p Plugins) RebuildConfig() error {
 	}
 	fmt.Fprint(allLuaPlugins, "]]\n")
 	fmt.Fprint(allLuaPlugins, "\n-- colorscheme\n")
-	fmt.Fprint(allLuaPlugins, "require'colorscheme.current'\n\n")
+	fmt.Fprint(allLuaPlugins, "require'colorscheme'\n\n")
 
 	fmt.Fprint(allLuaPlugins, "-- config files\n")
 	for _, name := range names {
@@ -106,8 +106,6 @@ func (p Plugins) RebuildConfig() error {
 			fmt.Fprintf(allLuaPlugins, "require'plugins.%s'\n", plugin.CleanName)
 		}
 	}
-
-	fmt.Fprint(allLuaPlugins, "\nrequire'colorscheme.changes'\n")
 
 	return Filesys.Rename(allLuaPlugins.Name(), allPluginsPath)
 }
