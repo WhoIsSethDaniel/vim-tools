@@ -14,10 +14,9 @@ import (
 )
 
 func main() {
-	var versionCheck, build bool
+	var versionCheck bool
 
 	flag.BoolVar(&versionCheck, "h", false, "Check version of each installed plugin")
-	flag.BoolVar(&build, "b", false, "Clone all defined plugins.")
 	flag.Parse()
 
 	plugins, err := tools.Read()
@@ -56,26 +55,9 @@ func main() {
 	defer close(toPrint)
 	defer close(errPrint)
 
-	addPlugin := func(pluginName string) {
-		plugin := plugins[pluginName]
-		cmd := exec.Command("git", "clone", plugin.URL) //nolint:gosec not a function
-		cmd.Dir = tools.PluginDir()
-		out, err := cmd.CombinedOutput()
-		if err != nil {
-			errPrint <- fmt.Errorf("%s: failed to run git: %s: %w", pluginName, strings.TrimRight(string(out), "\n"), err)
-			return
-		}
-		toPrint <- fmt.Sprintf("CLONED %s", pluginName)
-	}
-
 	for _, pluginName := range args {
 		wg.Add(1)
-		if build {
-			go func(pluginName string) {
-				defer wg.Done()
-				addPlugin(pluginName)
-			}(pluginName)
-		} else if versionCheck {
+		if versionCheck {
 			go func(pluginName string) {
 				defer wg.Done()
 				out, err := runGit(pluginName, "rev-parse", "HEAD")
@@ -89,7 +71,15 @@ func main() {
 			go func(pluginName string) {
 				defer wg.Done()
 				if _, err := os.Stat(filepath.Join(tools.PluginDir(), pluginName)); err != nil {
-					addPlugin(pluginName)
+					plugin := plugins[pluginName]
+					cmd := exec.Command("git", "clone", plugin.URL) //nolint:gosec not a function
+					cmd.Dir = tools.PluginDir()
+					out, err := cmd.CombinedOutput()
+					if err != nil {
+						errPrint <- fmt.Errorf("%s: failed to run git: %s: %w", pluginName, strings.TrimRight(string(out), "\n"), err)
+						return
+					}
+					toPrint <- fmt.Sprintf("CLONED %s", pluginName)
 					return
 				}
 				symref, err := runGit(pluginName, "symbolic-ref", "HEAD")
