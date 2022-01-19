@@ -55,20 +55,25 @@ func main() {
 	errPrint := make(chan error)
 	defer close(toPrint)
 	defer close(errPrint)
+
+	addPlugin := func(pluginName string) {
+		plugin := plugins[pluginName]
+		cmd := exec.Command("git", "clone", plugin.URL) //nolint:gosec not a function
+		cmd.Dir = tools.PluginDir()
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			errPrint <- fmt.Errorf("%s: failed to run git: %s: %w", pluginName, strings.TrimRight(string(out), "\n"), err)
+			return
+		}
+		toPrint <- fmt.Sprintf("CLONED %s", pluginName)
+	}
+
 	for _, pluginName := range args {
 		wg.Add(1)
 		if build {
 			go func(pluginName string) {
 				defer wg.Done()
-				plugin := plugins[pluginName]
-				cmd := exec.Command("git", "clone", plugin.URL) //nolint:gosec not a function
-				cmd.Dir = tools.PluginDir()
-				out, err := cmd.CombinedOutput()
-				if err != nil {
-					errPrint <- fmt.Errorf("%s: failed to run git: %s: %w", pluginName, strings.TrimRight(string(out), "\n"), err)
-					return
-				}
-				toPrint <- fmt.Sprintf("%s: cloned", pluginName)
+				addPlugin(pluginName)
 			}(pluginName)
 		} else if versionCheck {
 			go func(pluginName string) {
@@ -83,6 +88,10 @@ func main() {
 		} else {
 			go func(pluginName string) {
 				defer wg.Done()
+				if _, err := os.Stat(filepath.Join(tools.PluginDir(), pluginName)); err != nil {
+					addPlugin(pluginName)
+					return
+				}
 				symref, err := runGit(pluginName, "symbolic-ref", "HEAD")
 				if err != nil {
 					errPrint <- err
@@ -150,5 +159,10 @@ done:
 		case e := <-errPrint:
 			fmt.Fprintf(os.Stderr, "%s\n", e)
 		}
+	}
+
+	if err := plugins.RebuildConfig(); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to rebuild configuration: %s\n", err)
+		os.Exit(1)
 	}
 }
