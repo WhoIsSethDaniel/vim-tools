@@ -327,7 +327,7 @@ func TestRebuildConfig(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		want := "-- load plugins\nvim.cmd[[\npackadd! colorscheme.nvim\npackadd! plugin-a\npackadd! plugin1.nvim\n\" packadd! someotherplugin.nvim\n]]\n\n-- colorscheme\nrequire'colorscheme.current'\n\n-- config files\n-- require'plugins.colorscheme-nvim'\n-- require'plugins.plugin-a'\n-- require'plugins.plugin1-nvim'\n-- require'plugins.someotherplugin-nvim'\n\nrequire'colorscheme.changes'\n"
+		want := "-- load plugins\nvim.cmd[[\npackadd! colorscheme.nvim\npackadd! plugin-a\npackadd! plugin1.nvim\n\" packadd! someotherplugin.nvim\n]]\n\n-- colorscheme\nrequire'colorscheme'\n\n-- config files\n-- require'plugins.colorscheme-nvim'\n-- require'plugins.plugin-a'\n-- require'plugins.plugin1-nvim'\n-- require'plugins.someotherplugin-nvim'\n"
 		if !reflect.DeepEqual(string(data), want) {
 			t.Errorf("got %#v, want %#v", string(data), want)
 		}
