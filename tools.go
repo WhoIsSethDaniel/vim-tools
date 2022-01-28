@@ -96,11 +96,7 @@ func (p Plugins) RebuildConfig() error {
 	fmt.Fprint(allLuaPlugins, "-- config files\n")
 	for _, name := range names {
 		plugin := p[name]
-		fi, err := Filesys.Stat(plugin.ConfigFilePath())
-		if err != nil {
-			return fmt.Errorf("cannot stat config file for '%s': %w", name, err)
-		}
-		if fi.Size() == 0 || plugin.IsDisabled() {
+		if plugin.IsDisabled() {
 			fmt.Fprintf(allLuaPlugins, "-- require'plugins.%s'\n", plugin.CleanName)
 		} else {
 			fmt.Fprintf(allLuaPlugins, "require'plugins.%s'\n", plugin.CleanName)
