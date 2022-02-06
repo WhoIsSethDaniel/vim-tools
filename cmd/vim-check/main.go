@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	tools "github.com/WhoIsSethDaniel/vim-tools"
 )
@@ -40,7 +42,9 @@ func main() {
 	}
 
 	runGit := func(pluginName string, args ...string) (string, error) {
-		cmd := exec.Command("git", args...)
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		cmd := exec.CommandContext(ctx, "git", args...)
 		cmd.Dir = filepath.Join(tools.PluginDir(), pluginName)
 		out, err := cmd.CombinedOutput()
 		if err != nil {
