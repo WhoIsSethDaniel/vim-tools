@@ -48,16 +48,16 @@ func filesToCheck(extra []string) []string {
 	return check
 }
 
-func pluginsOnDisk() []string {
+func pluginsOnDisk() map[string]bool {
 	ent, err := os.ReadDir(tools.PluginDir())
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Cannot read plugin directory: %s\n", err)
 		os.Exit(1)
 	}
-	var pluginsOnDisk []string
+	pluginsOnDisk := make(map[string]bool)
 	for _, dir := range ent {
 		if dir.IsDir() {
-			pluginsOnDisk = append(pluginsOnDisk, dir.Name())
+			pluginsOnDisk[dir.Name()] = true
 		}
 	}
 	return pluginsOnDisk
@@ -88,11 +88,16 @@ func main() {
 	fmt.Printf("  total: %d\n", numPlugins)
 	fmt.Printf("  on-disk: %d\n", numPluginsOnDisk)
 	if numPluginsOnDisk != numPlugins {
-		fmt.Print("    ERROR total should equal on-disk\n")
-		for _, pluginName := range pluginsOnDisk {
-			if _, ok := plugins[pluginName]; !ok {
-				fmt.Printf("    - %s\n", pluginName)
-			}
+		fmt.Print("    - ERROR total should equal on-disk\n")
+	}
+	for pluginName := range pluginsOnDisk {
+		if _, ok := plugins[pluginName]; !ok {
+			fmt.Printf("    - UNKNOWN on-disk: %s\n", pluginName)
+		}
+	}
+	for _, plugin := range plugins {
+		if _, ok := pluginsOnDisk[plugin.Name]; !ok {
+			fmt.Printf("    - UNINSTALLED: %s\n", plugin.Name)
 		}
 	}
 	fmt.Printf("  colorscheme: %d\n", csPlugins)
