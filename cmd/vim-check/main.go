@@ -76,7 +76,7 @@ func main() {
 				defer wg.Done()
 				if _, err := os.Stat(filepath.Join(tools.PluginDir(), pluginName)); err != nil {
 					plugin := plugins[pluginName]
-					cmd := exec.Command("git", "clone", plugin.URL) //nolint:gosec not a function
+					cmd := exec.Command("git", "clone", plugin.URL) //nolint:gosec // not a function
 					cmd.Dir = tools.PluginDir()
 					out, err := cmd.CombinedOutput()
 					if err != nil {
