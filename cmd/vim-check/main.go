@@ -116,6 +116,11 @@ func main() {
 				rheads := strings.Split(rheadRefs, "\n")
 				for _, ref := range rheads {
 					f := strings.Fields(ref)
+					if len(f) == 0 {
+						errPrint <- fmt.Errorf("ERROR %s: no remote heads found (possible change of primary branch?)", pluginName)
+						return
+					}
+
 					if f[1] == symref {
 						rhead = f[0]
 					}
