@@ -24,6 +24,7 @@ type Plugin struct {
 	ConfigFile  string `json:"config_file"`
 	Colorscheme bool   `json:"colorscheme"`
 	Enabled     bool   `json:"enabled"`
+	Frozen      bool   `json:"frozen"`
 }
 
 // Plugins ....
@@ -44,7 +45,10 @@ func PluginDir() string {
 	if !ok {
 		panic("XDG_CONFIG_HOME must be set.")
 	}
-	return filepath.Join(configHome, "nvim/pack/git-plugins/opt") //nolint:gocritic // use of / is fine
+	return filepath.Join(
+		configHome,
+		"nvim", "pack", "git-plugins", "opt",
+	)
 }
 
 // ConfigFileDir ....
@@ -75,7 +79,11 @@ func (p Plugins) RebuildConfig() error {
 	names := p.SortedNames()
 
 	allPluginsPath := AllPluginsPath()
-	allLuaPlugins, _ := afero.TempFile(Filesys, filepath.Dir(allPluginsPath), filepath.Base(allPluginsPath))
+	allLuaPlugins, _ := afero.TempFile(
+		Filesys,
+		filepath.Dir(allPluginsPath),
+		filepath.Base(allPluginsPath),
+	)
 	defer allLuaPlugins.Close()
 	defer Filesys.Remove(allLuaPlugins.Name())
 
@@ -96,10 +104,12 @@ func (p Plugins) RebuildConfig() error {
 	fmt.Fprint(allLuaPlugins, "-- config files\n")
 	for _, name := range names {
 		plugin := p[name]
-		if plugin.IsDisabled() {
-			fmt.Fprintf(allLuaPlugins, "-- require'plugins.%s'\n", plugin.CleanName)
-		} else {
-			fmt.Fprintf(allLuaPlugins, "require'plugins.%s'\n", plugin.CleanName)
+		if _, err := os.Stat(plugin.ConfigFilePath()); err == nil {
+			if plugin.IsDisabled() {
+				fmt.Fprintf(allLuaPlugins, "-- require'plugins.%s'\n", plugin.CleanName)
+			} else {
+				fmt.Fprintf(allLuaPlugins, "require'plugins.%s'\n", plugin.CleanName)
+			}
 		}
 	}
 
@@ -184,6 +194,18 @@ func (p Plugins) Write() error {
 // ConfigFilePath ....
 func (plugin Plugin) ConfigFilePath() string {
 	return filepath.Join(ConfigFileDir(), plugin.ConfigFile)
+}
+
+// Freeze ....
+func (plugin Plugin) Freeze() Plugin {
+	plugin.Frozen = true
+	return plugin
+}
+
+// Thaw
+func (plugin Plugin) Thaw() Plugin {
+	plugin.Frozen = false
+	return plugin
 }
 
 // Disable ....

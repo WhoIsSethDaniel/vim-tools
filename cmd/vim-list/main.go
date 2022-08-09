@@ -25,6 +25,9 @@ func main() {
 			plugin := plugins[name]
 			if f(plugin) {
 				fmt.Print(name)
+				if plugin.Frozen {
+					fmt.Print(" [*]")
+				}
 				if listURL {
 					fmt.Printf(" [%s]", plugin.URL)
 				}

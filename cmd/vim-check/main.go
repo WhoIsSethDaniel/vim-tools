@@ -17,7 +17,6 @@ import (
 
 func main() {
 	var versionCheck bool
-
 	flag.BoolVar(&versionCheck, "h", false, "Check version of each installed plugin")
 	flag.Parse()
 
@@ -74,8 +73,8 @@ func main() {
 		} else {
 			go func(pluginName string) {
 				defer wg.Done()
+				plugin := plugins[pluginName]
 				if _, err := os.Stat(filepath.Join(tools.PluginDir(), pluginName)); err != nil {
-					plugin := plugins[pluginName]
 					cmd := exec.Command("git", "clone", plugin.URL) //nolint:gosec // not a function
 					cmd.Dir = tools.PluginDir()
 					out, err := cmd.CombinedOutput()
@@ -84,6 +83,10 @@ func main() {
 						return
 					}
 					toPrint <- fmt.Sprintf("CLONED %s", pluginName)
+					return
+				}
+				if plugin.Frozen {
+					toPrint <- fmt.Sprintf("FROZEN %s", pluginName)
 					return
 				}
 				symref, err := runGit(pluginName, "symbolic-ref", "HEAD")

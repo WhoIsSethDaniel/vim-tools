@@ -32,19 +32,11 @@ func dirsToCheck() []string {
 	}
 	check := []string{
 		filepath.Join(dataHome, "nvim"),
-		filepath.Join(dataHome, "nvim/lua"),
-		filepath.Join(dataHome, "nvim/lua/plugins"),
-		filepath.Join(dataHome, "nvim/pack/git-plugins/opt"),
-		filepath.Join(home, ".cache/nvim"),
+		filepath.Join(dataHome, "nvim", "lua"),
+		filepath.Join(dataHome, "nvim", "lua", "plugins"),
+		filepath.Join(dataHome, "nvim", "pack", "git-plugins", "opt"),
+		filepath.Join(home, ".cache", "nvim"),
 	}
-	return check
-}
-
-func filesToCheck(extra []string) []string {
-	check := []string{
-		tools.PluginsFilePath(),
-	}
-	check = append(check, extra...)
 	return check
 }
 
@@ -74,14 +66,12 @@ func main() {
 	numPluginsOnDisk := len(pluginsOnDisk)
 	disabledPlugins := 0
 	csPlugins := 0
-	pluginConfigFiles := []string{}
 	for _, plugin := range plugins {
 		if plugin.IsDisabled() {
 			disabledPlugins++
 		} else if plugin.IsColorscheme() {
 			csPlugins++
 		}
-		pluginConfigFiles = append(pluginConfigFiles, plugin.ConfigFilePath())
 	}
 
 	fmt.Print("# of modules:\n")
@@ -104,20 +94,10 @@ func main() {
 	fmt.Printf("  disabled: %d\n", disabledPlugins)
 
 	// check important dirs/files
-	missingFiles := check(filesToCheck(pluginConfigFiles))
 	missingDirs := check(dirsToCheck())
 
 	fmt.Print("\nsanity check:\n")
-	fmt.Print("  checking files: ")
-	if len(missingFiles) > 0 {
-		for _, miss := range missingFiles {
-			fmt.Printf("\n    %s is MISSING", miss)
-		}
-	} else {
-		fmt.Print("all ok")
-	}
-
-	fmt.Print("\n  checking dirs: ")
+	fmt.Print("  checking dirs: ")
 	if len(missingDirs) > 0 {
 		for _, miss := range missingDirs {
 			fmt.Printf("\n   %s is MISSING", miss)
