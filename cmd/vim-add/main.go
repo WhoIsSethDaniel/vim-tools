@@ -34,16 +34,6 @@ func main() {
 			os.Exit(1)
 		}
 		cancel()
-
-		plugin := plugins.Add(arg)
-
-		fmt.Printf(" - create config %s\n", plugin.ConfigFilePath())
-		f, err := os.Create(plugin.ConfigFilePath())
-		f.Close()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to create config file: %s\n", err)
-			os.Exit(1)
-		}
 	}
 
 	fmt.Print(" - rewrite files\n")

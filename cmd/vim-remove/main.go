@@ -38,11 +38,6 @@ func main() {
 			os.Exit(1)
 		}
 
-		fmt.Print(" - removing config file\n")
-		if err := os.Remove(plugin.ConfigFilePath()); err != nil {
-			fmt.Printf("Failed to remove plugin %s config file: %s\n", arg, err)
-			os.Exit(1)
-		}
 		plugins.Remove(plugin)
 	}
 
