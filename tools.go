@@ -57,7 +57,7 @@ func ConfigFileDir() string {
 	if !ok {
 		panic("XDG_CONFIG_HOME must be set.")
 	}
-	return filepath.Join(configHome, "nvim/lua/plugins") //nolint:gocritic // use of / is fine
+	return filepath.Join(configHome, "nvim", "lua", "plugins")
 }
 
 // PluginsFilePath ....
@@ -71,7 +71,7 @@ func AllPluginsPath() string {
 	if !ok {
 		panic("XDG_CONFIG_HOME must be set.")
 	}
-	return filepath.Join(configHome, "nvim/lua/all.lua") //nolint:gocritic // use of / is fine
+	return filepath.Join(configHome, "nvim", "lua", "all.lua")
 }
 
 // RebuildConfig ....
