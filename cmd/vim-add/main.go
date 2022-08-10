@@ -34,6 +34,7 @@ func main() {
 			os.Exit(1)
 		}
 		cancel()
+		plugins.Add(arg)
 	}
 
 	fmt.Print(" - rewrite files\n")
