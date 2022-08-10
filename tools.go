@@ -220,6 +220,11 @@ func (plugin Plugin) Enable() Plugin {
 	return plugin
 }
 
+// IsFrozen ....
+func (plugin Plugin) IsFrozen() bool {
+	return plugin.Frozen
+}
+
 // IsEnabled ....
 func (plugin Plugin) IsEnabled() bool {
 	return plugin.Enabled

@@ -9,8 +9,14 @@ import (
 )
 
 func main() {
-	var listURL bool
+	var listURL, raw bool
 	flag.BoolVar(&listURL, "u", false, "List the repo URL along with the name")
+	flag.BoolVar(
+		&raw,
+		"r",
+		false,
+		"List just sorted names of plugins. No categorization, no special flags.",
+	)
 	flag.Parse()
 
 	plugins, err := tools.Read()
@@ -18,35 +24,34 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Failed to read all plugin file: %s\n", err)
 		os.Exit(1)
 	}
-	pluginNames := plugins.SortedNames()
 
-	filterAndPrint := func(f func(p tools.Plugin) bool) {
-		for _, name := range pluginNames {
-			plugin := plugins[name]
-			if f(plugin) {
-				fmt.Print(name)
-				if plugin.Frozen {
-					fmt.Print(" [*]")
-				}
-				if listURL {
-					fmt.Printf(" [%s]", plugin.URL)
-				}
-				fmt.Println()
+	pluginNames := plugins.SortedNames()
+	for _, name := range pluginNames {
+		plugin := plugins[name]
+		if raw {
+			fmt.Printf("%s", name)
+		} else {
+			flags := ""
+			if plugin.IsColorscheme() {
+				flags += "C"
+			} else {
+				flags += " "
+			}
+			if plugin.IsDisabled() {
+				flags += "D"
+			} else {
+				flags += " "
+			}
+			if plugin.IsFrozen() {
+				flags += "F"
+			} else {
+				flags += " "
+			}
+			fmt.Printf("%s  %s", flags, name)
+			if listURL {
+				fmt.Printf(" [%s]", plugin.URL)
 			}
 		}
+		fmt.Println()
 	}
-
-	filterAndPrint(func(plugin tools.Plugin) bool {
-		return !plugin.IsColorscheme() && !plugin.IsDisabled()
-	})
-
-	fmt.Println("\n" + "colorschemes:")
-	filterAndPrint(func(plugin tools.Plugin) bool {
-		return plugin.IsColorscheme()
-	})
-
-	fmt.Println("\n" + "disabled:")
-	filterAndPrint(func(plugin tools.Plugin) bool {
-		return plugin.IsDisabled()
-	})
 }
