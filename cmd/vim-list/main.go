@@ -9,11 +9,11 @@ import (
 )
 
 func main() {
-	var listURL, raw bool
+	var listURL, showFlags bool
 	flag.BoolVar(&listURL, "u", false, "List the repo URL along with the name")
 	flag.BoolVar(
-		&raw,
-		"r",
+		&showFlags,
+		"f",
 		false,
 		"List just sorted names of plugins. No categorization, no special flags.",
 	)
@@ -28,29 +28,28 @@ func main() {
 	pluginNames := plugins.SortedNames()
 	for _, name := range pluginNames {
 		plugin := plugins[name]
-		if raw {
-			fmt.Printf("%s", name)
+		flags := ""
+		if plugin.IsColorscheme() {
+			flags += "C"
 		} else {
-			flags := ""
-			if plugin.IsColorscheme() {
-				flags += "C"
-			} else {
-				flags += " "
-			}
-			if plugin.IsDisabled() {
-				flags += "D"
-			} else {
-				flags += " "
-			}
-			if plugin.IsFrozen() {
-				flags += "F"
-			} else {
-				flags += " "
-			}
-			fmt.Printf("%s  %s", flags, name)
-			if listURL {
-				fmt.Printf(" [%s]", plugin.URL)
-			}
+			flags += " "
+		}
+		if plugin.IsDisabled() {
+			flags += "D"
+		} else {
+			flags += " "
+		}
+		if plugin.IsFrozen() {
+			flags += "F"
+		} else {
+			flags += " "
+		}
+		if showFlags {
+			fmt.Printf("%s  ", flags)
+		}
+		fmt.Print(name)
+		if listURL {
+			fmt.Printf(" [%s]", plugin.URL)
 		}
 		fmt.Println()
 	}
