@@ -65,12 +65,17 @@ func main() {
 	pluginsOnDisk := pluginsOnDisk()
 	numPluginsOnDisk := len(pluginsOnDisk)
 	disabledPlugins := 0
+	frozenPlugins := 0
 	csPlugins := 0
 	for _, plugin := range plugins {
 		if plugin.IsDisabled() {
 			disabledPlugins++
-		} else if plugin.IsColorscheme() {
+		}
+		if plugin.IsColorscheme() {
 			csPlugins++
+		}
+		if plugin.IsFrozen() {
+			frozenPlugins++
 		}
 	}
 
@@ -92,6 +97,7 @@ func main() {
 	}
 	fmt.Printf("  colorscheme: %d\n", csPlugins)
 	fmt.Printf("  disabled: %d\n", disabledPlugins)
+	fmt.Printf("  frozen: %d\n", frozenPlugins)
 
 	// check important dirs/files
 	missingDirs := check(dirsToCheck())
