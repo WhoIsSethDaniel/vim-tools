@@ -16,9 +16,9 @@ import (
 func createInstalledPlugin(t *testing.T, f afero.Fs, name, clean string, colorscheme bool) {
 	t.Helper()
 
-	f.MkdirAll(filepath.Join(tools.PluginDir(), name), 0755)
+	f.MkdirAll(filepath.Join(tools.PluginDir(), name), 0o755)
 	if colorscheme {
-		f.MkdirAll(filepath.Join(tools.PluginDir(), name, "colors"), 0755)
+		f.MkdirAll(filepath.Join(tools.PluginDir(), name, "colors"), 0o755)
 	}
 	f.Create(filepath.Join(tools.ConfigFileDir(), fmt.Sprintf("%s.lua", clean)))
 }
@@ -31,9 +31,9 @@ func prepareEnv(t *testing.T) {
 
 	tools.Filesys = afero.NewMemMapFs()
 	f := tools.Filesys
-	f.MkdirAll(tools.MetadataDir(), 0755)
-	f.MkdirAll(tools.PluginDir(), 0755)
-	f.MkdirAll(tools.ConfigFileDir(), 0755)
+	f.MkdirAll(tools.MetadataDir(), 0o755)
+	f.MkdirAll(tools.PluginDir(), 0o755)
+	f.MkdirAll(tools.ConfigFileDir(), 0o755)
 }
 
 func createPluginsFile(t *testing.T) {

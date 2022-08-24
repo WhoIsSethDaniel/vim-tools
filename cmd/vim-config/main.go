@@ -28,6 +28,7 @@ func main() {
 		plugin, ok := plugins[arg]
 		if !ok {
 			fmt.Fprintf(os.Stderr, "cannot find %s\n", arg)
+			continue
 		}
 
 		if create {
