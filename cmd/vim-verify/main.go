@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -40,22 +41,24 @@ func dirsToCheck() []string {
 	return check
 }
 
-func pluginsOnDisk() map[string]bool {
+func pluginsOnDisk() map[string]string {
 	ent, err := os.ReadDir(tools.PluginDir())
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Cannot read plugin directory: %s\n", err)
 		os.Exit(1)
 	}
-	pluginsOnDisk := make(map[string]bool)
+	pluginsOnDisk := make(map[string]string)
 	for _, dir := range ent {
 		if dir.IsDir() {
-			pluginsOnDisk[dir.Name()] = true
+			pluginsOnDisk[dir.Name()] = filepath.Join(tools.PluginDir(), dir.Name())
 		}
 	}
 	return pluginsOnDisk
 }
 
 func main() {
+	delUnknown := flag.Bool("d", false, "List the repo URL along with the name")
+	flag.Parse()
 	plugins, err := tools.Read()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to read plugins file: %s\n", err)
@@ -85,14 +88,19 @@ func main() {
 	if numPluginsOnDisk != numPlugins {
 		fmt.Print("    - ERROR total should equal on-disk\n")
 	}
-	for pluginName := range pluginsOnDisk {
+	for pluginName, pluginPath := range pluginsOnDisk {
 		if _, ok := plugins[pluginName]; !ok {
-			fmt.Printf("    - UNKNOWN on-disk: %s\n", pluginName)
+			fmt.Printf("    - INSTALLED %s [%s]", pluginName, pluginPath)
+			if *delUnknown {
+				fmt.Print("...REMOVING")
+				os.RemoveAll(pluginPath)
+			}
+			fmt.Print("\n")
 		}
 	}
 	for _, plugin := range plugins {
 		if _, ok := pluginsOnDisk[plugin.Name]; !ok {
-			fmt.Printf("    - UNINSTALLED: %s\n", plugin.Name)
+			fmt.Printf("    - UNINSTALLED %s\n", plugin.Name)
 		}
 	}
 	fmt.Printf("  colorscheme: %d\n", csPlugins)
