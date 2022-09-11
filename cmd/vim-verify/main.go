@@ -57,7 +57,11 @@ func pluginsOnDisk() map[string]string {
 }
 
 func main() {
-	delUnknown := flag.Bool("d", false, "List the repo URL along with the name")
+	delUnknown := flag.Bool(
+		"d",
+		false,
+		"Delete directories in the plugin directory that should not be there",
+	)
 	flag.Parse()
 	plugins, err := tools.Read()
 	if err != nil {
