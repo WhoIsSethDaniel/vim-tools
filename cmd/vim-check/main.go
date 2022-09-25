@@ -15,6 +15,21 @@ import (
 	tools "github.com/WhoIsSethDaniel/vim-tools"
 )
 
+func pluginsOnDisk() map[string]string {
+	ent, err := os.ReadDir(tools.PluginDir())
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Cannot read plugin directory: %s\n", err)
+		os.Exit(1)
+	}
+	pluginsOnDisk := make(map[string]string)
+	for _, dir := range ent {
+		if dir.IsDir() {
+			pluginsOnDisk[dir.Name()] = filepath.Join(tools.PluginDir(), dir.Name())
+		}
+	}
+	return pluginsOnDisk
+}
+
 func main() {
 	var versionCheck bool
 	flag.BoolVar(&versionCheck, "h", false, "Check version of each installed plugin")
@@ -163,8 +178,15 @@ done:
 		}
 	}
 
+	// remove plugins that are no longer being used
+	for pluginName, pluginPath := range pluginsOnDisk() {
+		if _, ok := plugins[pluginName]; !ok {
+			fmt.Printf("DELETE %s\n", pluginName)
+			os.RemoveAll(pluginPath)
+		}
+	}
+
 	if err := plugins.RebuildConfig(); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to rebuild configuration: %s\n", err)
-		os.Exit(1)
 	}
 }

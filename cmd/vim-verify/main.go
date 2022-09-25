@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -57,12 +56,6 @@ func pluginsOnDisk() map[string]string {
 }
 
 func main() {
-	delUnknown := flag.Bool(
-		"d",
-		false,
-		"Delete directories in the plugin directory that should not be there",
-	)
-	flag.Parse()
 	plugins, err := tools.Read()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to read plugins file: %s\n", err)
@@ -94,12 +87,7 @@ func main() {
 	}
 	for pluginName, pluginPath := range pluginsOnDisk {
 		if _, ok := plugins[pluginName]; !ok {
-			fmt.Printf("    - INSTALLED %s [%s]", pluginName, pluginPath)
-			if *delUnknown {
-				fmt.Print("...REMOVING")
-				os.RemoveAll(pluginPath)
-			}
-			fmt.Print("\n")
+			fmt.Printf("    - INSTALLED %s [%s]\n", pluginName, pluginPath)
 		}
 	}
 	for _, plugin := range plugins {
