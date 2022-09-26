@@ -162,6 +162,14 @@ func main() {
 
 	done := make(chan struct{})
 	go func() {
+		// remove plugins that are no longer being used
+		for pluginName, pluginPath := range pluginsOnDisk() {
+			if _, ok := plugins[pluginName]; !ok {
+				fmt.Printf("DELETE %s\n", pluginName)
+				os.RemoveAll(pluginPath)
+			}
+		}
+
 		defer close(done)
 		wg.Wait()
 	}()
@@ -175,14 +183,6 @@ done:
 			fmt.Print(txt + "\n")
 		case e := <-errPrint:
 			fmt.Fprintf(os.Stderr, "%s\n", e)
-		}
-	}
-
-	// remove plugins that are no longer being used
-	for pluginName, pluginPath := range pluginsOnDisk() {
-		if _, ok := plugins[pluginName]; !ok {
-			fmt.Printf("DELETE %s\n", pluginName)
-			os.RemoveAll(pluginPath)
 		}
 	}
 
