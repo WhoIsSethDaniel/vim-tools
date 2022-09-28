@@ -74,6 +74,22 @@ func AllPluginsPath() string {
 	return filepath.Join(configHome, "nvim", "lua", "all.lua")
 }
 
+// PluginsOnDisk ....
+func PluginsOnDisk() map[string]string {
+	ent, err := os.ReadDir(PluginDir())
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Cannot read plugin directory: %s\n", err)
+		os.Exit(1)
+	}
+	pluginsOnDisk := make(map[string]string)
+	for _, dir := range ent {
+		if dir.IsDir() {
+			pluginsOnDisk[dir.Name()] = filepath.Join(PluginDir(), dir.Name())
+		}
+	}
+	return pluginsOnDisk
+}
+
 // RebuildConfig ....
 func (p Plugins) RebuildConfig() error {
 	names := p.SortedNames()

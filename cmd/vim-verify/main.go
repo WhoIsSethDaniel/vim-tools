@@ -40,21 +40,6 @@ func dirsToCheck() []string {
 	return check
 }
 
-func pluginsOnDisk() map[string]string {
-	ent, err := os.ReadDir(tools.PluginDir())
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Cannot read plugin directory: %s\n", err)
-		os.Exit(1)
-	}
-	pluginsOnDisk := make(map[string]string)
-	for _, dir := range ent {
-		if dir.IsDir() {
-			pluginsOnDisk[dir.Name()] = filepath.Join(tools.PluginDir(), dir.Name())
-		}
-	}
-	return pluginsOnDisk
-}
-
 func main() {
 	plugins, err := tools.Read()
 	if err != nil {
@@ -62,7 +47,7 @@ func main() {
 		os.Exit(1)
 	}
 	numPlugins := len(plugins)
-	pluginsOnDisk := pluginsOnDisk()
+	pluginsOnDisk := tools.PluginsOnDisk()
 	numPluginsOnDisk := len(pluginsOnDisk)
 	disabledPlugins := 0
 	frozenPlugins := 0
