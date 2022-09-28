@@ -17,7 +17,7 @@ import (
 
 func main() {
 	var versionCheck bool
-	flag.BoolVar(&versionCheck, "h", false, "Check version of each installed plugin")
+	flag.BoolVar(&versionCheck, "v", false, "Check version of each installed plugin")
 	flag.Parse()
 
 	plugins, err := tools.Read()
