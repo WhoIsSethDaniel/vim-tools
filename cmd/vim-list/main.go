@@ -15,7 +15,7 @@ func main() {
 		&showFlags,
 		"f",
 		false,
-		"List just sorted names of plugins. No categorization, no special flags.",
+		"Show flags for each module.",
 	)
 	flag.Parse()
 
