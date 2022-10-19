@@ -61,7 +61,7 @@ func main() {
 	if edit {
 		for _, config := range configs {
 			if _, err := os.Stat(config); err != nil {
-				fmt.Fprintf(os.Stderr, "Config file '%s' does not exist: %s\n", config, err)
+				fmt.Fprintf(os.Stderr, "Config file '%s' does not exist\n", config)
 				os.Exit(1)
 			}
 		}
