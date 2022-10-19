@@ -36,7 +36,7 @@ func main() {
 			continue
 		}
 
-		if create || edit {
+		if create {
 			if _, err := os.Stat(plugin.ConfigFilePath()); err != nil {
 				f, err := os.Create(plugin.ConfigFilePath())
 				f.Close()
@@ -59,6 +59,12 @@ func main() {
 	}
 
 	if edit {
+		for _, config := range configs {
+			if _, err := os.Stat(config); err != nil {
+				fmt.Fprintf(os.Stderr, "Config file '%s' does not exist: %s\n", config, err)
+				os.Exit(1)
+			}
+		}
 		cmd, err := exec.LookPath("sensible-editor")
 		if err != nil {
 			fmt.Printf("Failed to find path for 'sensible-editor': %s\n", err)
