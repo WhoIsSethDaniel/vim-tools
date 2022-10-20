@@ -49,6 +49,10 @@ func main() {
 		configs = append(configs, plugin.ConfigFilePath())
 	}
 
+	if len(configs) == 0 {
+		os.Exit(1)
+	}
+
 	if err := plugins.Write(); err != nil {
 		fmt.Fprintf(os.Stderr, "%s", err)
 		os.Exit(1)
