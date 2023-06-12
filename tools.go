@@ -115,7 +115,14 @@ func (p Plugins) RebuildConfig() error {
 	}
 	fmt.Fprint(allLuaPlugins, "]]\n")
 	fmt.Fprint(allLuaPlugins, "\n-- colorscheme\n")
-	fmt.Fprint(allLuaPlugins, "require'colorscheme'\n\n")
+	for _, name := range names {
+		plugin := p[name]
+		if plugin.Colorscheme && plugin.IsEnabled() {
+			if _, err := os.Stat(plugin.ConfigFilePath()); err == nil {
+				fmt.Fprintf(allLuaPlugins, "require'plugins.%s'\n\n", plugin.CleanName)
+			}
+		}
+	}
 
 	fmt.Fprint(allLuaPlugins, "-- config files\n")
 	for _, name := range names {
