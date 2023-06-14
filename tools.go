@@ -129,7 +129,7 @@ func (p Plugins) RebuildConfig() error {
 	for _, name := range names {
 		plugin := p[name]
 		if _, err := os.Stat(plugin.ConfigFilePath()); err == nil {
-			if plugin.IsDisabled() {
+			if plugin.IsDisabled() || plugin.Colorscheme {
 				fmt.Fprintf(allLuaPlugins, "-- require'plugins.%s'\n", plugin.CleanName)
 			} else {
 				fmt.Fprintf(allLuaPlugins, "require'plugins.%s'\n", plugin.CleanName)
