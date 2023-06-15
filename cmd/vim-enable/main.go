@@ -16,9 +16,18 @@ func main() {
 	}
 	for _, arg := range os.Args[1:] {
 		plugin, ok := plugins[arg]
-		if !ok {
+		switch {
+		case !ok:
 			fmt.Fprintf(os.Stderr, "cannot find %s\n", arg)
-		} else {
+		case plugin.Colorscheme:
+			// only allow one colorscheme to be active at any one time
+			plugins[arg] = plugin.Enable()
+			for i := range plugins {
+				if plugins[i].Colorscheme && plugin.Name != plugins[i].Name {
+					plugins[i] = plugins[i].Disable()
+				}
+			}
+		default:
 			plugins[arg] = plugin.Enable()
 		}
 	}
