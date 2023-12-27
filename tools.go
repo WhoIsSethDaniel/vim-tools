@@ -120,7 +120,7 @@ func (p Plugins) RebuildConfig() error {
 		if plugin.Colorscheme && plugin.IsEnabled() {
 			if _, err := os.Stat(plugin.ConfigFilePath()); err == nil {
 				fmt.Fprintf(allLuaPlugins, "require'plugins.%s'\n\n", plugin.CleanName)
-				break // only allow the first enaled colorscheme
+				break // only allow the first enabled colorscheme
 			}
 		}
 	}
