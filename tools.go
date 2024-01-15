@@ -151,10 +151,12 @@ func (p Plugins) SortedNames() []string {
 }
 
 // Add ....
-func (p Plugins) Add(url string) Plugin {
-	key := filepath.Base(strings.Split(url, ":")[1])
+func (p Plugins) Add(url, name string) Plugin {
+	if name == "" {
+		name = filepath.Base(strings.Split(url, ":")[1])
+	}
 	plugin := Plugin{
-		Name:        key,
+		Name:        name,
 		URL:         url,
 		Enabled:     true,
 		Colorscheme: false,
@@ -164,15 +166,15 @@ func (p Plugins) Add(url string) Plugin {
 			return '-'
 		}
 		return c
-	}, key)
+	}, name)
 	plugin.ConfigFile = fmt.Sprintf("%s.lua", plugin.CleanName)
 
-	_, err := Filesys.Stat(filepath.Join(PluginDir(), key, "colors"))
+	_, err := Filesys.Stat(filepath.Join(PluginDir(), name, "colors"))
 	if !errors.Is(err, fs.ErrNotExist) {
 		plugin.Colorscheme = true
 	}
-	p[key] = plugin
-	return p[key]
+	p[name] = plugin
+	return p[name]
 }
 
 // Remove ....

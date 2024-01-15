@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -12,8 +13,16 @@ import (
 )
 
 func main() {
-	if len(os.Args) == 0 {
-		fmt.Fprintf(os.Stderr, "Usage: %s url [url ...]\n", filepath.Base(os.Args[0]))
+	var name string
+	flag.StringVar(&name, "n", "", "Name for given URL (only one URL may be specified)")
+	flag.Parse()
+
+	if flag.NArg() == 0 {
+		fmt.Fprintf(os.Stderr, "Usage: %s [-n] url [url ...]\n", filepath.Base(os.Args[0]))
+		os.Exit(1)
+	}
+	if name != "" && flag.NArg() > 1 {
+		fmt.Fprintf(os.Stderr, "When -n is provided only one URL may be given")
 		os.Exit(1)
 	}
 
@@ -22,19 +31,25 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Failed to read plugins file: %s\n", err)
 		os.Exit(1)
 	}
+
 	baseCtx := context.Background()
-	for _, arg := range os.Args[1:] {
+	for _, arg := range flag.Args() {
 		fmt.Print(" - cloning\n")
 
 		ctx, cancel := context.WithTimeout(baseCtx, 30*time.Second)
-		git := exec.CommandContext(ctx, "git", "clone", arg)
+		var git *exec.Cmd
+		if name == "" {
+			git = exec.CommandContext(ctx, "git", "clone", arg)
+		} else {
+			git = exec.CommandContext(ctx, "git", "clone", arg, name)
+		}
 		git.Dir = tools.PluginDir()
 		if _, err := git.Output(); err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to run git command: %s\n", err)
 			os.Exit(1)
 		}
 		cancel()
-		plugins.Add(arg)
+		plugins.Add(arg, name)
 	}
 
 	fmt.Print(" - rewrite files\n")
