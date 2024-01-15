@@ -1,5 +1,5 @@
 GO := go
-TARGETS := vim-check vim-add vim-remove vim-verify vim-list vim-enable vim-disable vim-build-sources vim-config vim-freeze vim-thaw
+TARGETS := vim-check vim-add vim-remove vim-verify vim-list vim-enable vim-disable vim-build-sources vim-config vim-freeze vim-thaw vim-rename
 PKG_TARGETS := $(TARGETS:%=./cmd/%)
 BUILD_TARGETS := $(TARGETS:%=build/%)
 BUILD_TAGS := netgo
