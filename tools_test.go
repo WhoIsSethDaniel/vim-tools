@@ -179,6 +179,7 @@ func TestWrite(t *testing.T) {
     "url": "https://gitlab.com/user/colorscheme.nvim",
     "colorscheme": true,
     "enabled": true,
+	"frozen": false,
 	"config_file":  "colorscheme-nvim.lua",
 	"clean_name":   "colorscheme-nvim"
   },
@@ -187,6 +188,7 @@ func TestWrite(t *testing.T) {
     "url": "git@github.com:SomeUser/plugin-a",
     "colorscheme": false,
     "enabled": true,
+	"frozen": false,
 	"config_file":  "plugin-a.lua",
 	"clean_name":   "plugin-a"
   },
@@ -195,6 +197,7 @@ func TestWrite(t *testing.T) {
     "url": "https://github.com/user/plugin1.nvim",
     "colorscheme": false,
     "enabled": true,
+	"frozen": false,
 	"config_file":  "plugin1-nvim.lua",
 	"clean_name":   "plugin1-nvim"
   },
@@ -203,6 +206,7 @@ func TestWrite(t *testing.T) {
     "url": "git@github.com:SomeOtherUser/someotherplugin.nvim",
     "colorscheme": false,
     "enabled": false,
+	"frozen": false,
 	"config_file":  "someotherplugin-nvim.lua",
 	"clean_name":   "someotherplugin-nvim"
   }
@@ -327,7 +331,7 @@ func TestRebuildConfig(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		want := "-- load plugins\nvim.cmd[[\npackadd! colorscheme.nvim\npackadd! plugin-a\npackadd! plugin1.nvim\n\" packadd! someotherplugin.nvim\n]]\n\n-- colorscheme\nrequire'colorscheme'\n\n-- config files\nrequire'plugins.colorscheme-nvim'\nrequire'plugins.plugin-a'\nrequire'plugins.plugin1-nvim'\n-- require'plugins.someotherplugin-nvim'\n"
+		want := "-- load plugins\nvim.cmd[[\npackadd! colorscheme.nvim\npackadd! plugin-a\npackadd! plugin1.nvim\n\" packadd! someotherplugin.nvim\n]]\n\n-- colorscheme\n-- config files\n"
 		if !reflect.DeepEqual(string(data), want) {
 			t.Errorf("got %#v, want %#v", string(data), want)
 		}
