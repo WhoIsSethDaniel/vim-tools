@@ -18,7 +18,7 @@ func main() {
 	flag.Parse()
 
 	if flag.NArg() == 0 {
-		fmt.Fprintf(os.Stderr, "Usage: %s [-n] url [url ...]\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(os.Stderr, "Usage: %s [-n name <url> | <url> ...]\n", filepath.Base(os.Args[0]))
 		os.Exit(1)
 	}
 	if name != "" && flag.NArg() > 1 {
