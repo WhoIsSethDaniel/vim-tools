@@ -2,8 +2,8 @@ GO := go
 TARGETS := vim-check vim-add vim-remove vim-verify vim-list vim-enable vim-disable vim-build-sources vim-config vim-freeze vim-thaw vim-rename
 PKG_TARGETS := $(TARGETS:%=./cmd/%)
 BUILD_TARGETS := $(TARGETS:%=build/%)
-BUILD_TAGS := netgo
-BUILD_CMD := CGO_ENABLED=0 $(GO) build -tags $(BUILD_TAGS)
+BUILD_CMD := CGO_ENABLED=0 $(GO) build
+INSTALL_CMD := CGO_ENABLED=0 $(GO) install
 
 .PHONY: all
 all:
@@ -18,7 +18,7 @@ $(PKG_TARGETS): ./cmd/%: build/%
 
 .PHONY: install
 install: all
-	$(GO) install $(PKG_TARGETS)
+	$(INSTALL_CMD) $(PKG_TARGETS)
 
 
 .PHONY: $(TARGETS)
