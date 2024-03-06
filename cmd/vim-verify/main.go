@@ -20,9 +20,14 @@ func check(check []string) []string {
 }
 
 func dirsToCheck() []string {
-	dataHome, ok := os.LookupEnv("XDG_CONFIG_HOME")
+	configHome, ok := os.LookupEnv("XDG_CONFIG_HOME")
 	if !ok {
-		fmt.Fprint(os.Stderr, "XDG_CONFIG_HOME does no seem to be set\n")
+		fmt.Fprint(os.Stderr, "XDG_CONFIG_HOME does not seem to be set\n")
+		os.Exit(1)
+	}
+	dataHome, ok := os.LookupEnv("XDG_DATA_HOME")
+	if !ok {
+		fmt.Fprint(os.Stderr, "XDG_DATA_HOME does not seem to be set\n")
 		os.Exit(1)
 	}
 	home, err := os.UserHomeDir()
@@ -32,10 +37,15 @@ func dirsToCheck() []string {
 	}
 	check := []string{
 		filepath.Join(dataHome, "nvim"),
-		filepath.Join(dataHome, "nvim", "lua"),
-		filepath.Join(dataHome, "nvim", "lua", "plugins"),
-		filepath.Join(dataHome, "nvim", "pack", "git-plugins", "opt"),
+		filepath.Join(dataHome, "nvim", "plugins"),
+		filepath.Join(dataHome, "nvim", "sessions"),
+		filepath.Join(dataHome, "nvim", "shada"),
+		filepath.Join(configHome, "nvim"),
+		filepath.Join(configHome, "nvim", "lua"),
+		filepath.Join(configHome, "nvim", "lua", "plugins"),
+		filepath.Join(configHome, "nvim", "pack", "git-plugins", "opt"),
 		filepath.Join(home, ".cache", "nvim"),
+		filepath.Join(home, ".local", "state", "nvim"),
 	}
 	return check
 }
