@@ -17,7 +17,7 @@ $(BUILD_TARGETS): build/%:
 $(PKG_TARGETS): ./cmd/%: build/%
 
 .PHONY: install
-install: all
+install:
 	$(INSTALL_CMD) $(PKG_TARGETS)
 
 
