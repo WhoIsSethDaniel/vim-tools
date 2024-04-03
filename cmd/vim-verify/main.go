@@ -35,17 +35,21 @@ func dirsToCheck() []string {
 		fmt.Fprintf(os.Stderr, "Cannot determine home directory: %s\n", err)
 		os.Exit(1)
 	}
+	stateHome, ok := os.LookupEnv("XDG_STATE_HOME")
+	if !ok {
+		stateHome = filepath.Join(home, ".local", "state")
+	}
 	check := []string{
 		filepath.Join(dataHome, "nvim"),
+		filepath.Join(stateHome, "nvim"),
+		filepath.Join(configHome, "nvim"),
+		filepath.Join(home, ".cache", "nvim"),
 		filepath.Join(dataHome, "nvim", "plugins"),
 		filepath.Join(dataHome, "nvim", "sessions"),
-		filepath.Join(dataHome, "nvim", "shada"),
-		filepath.Join(configHome, "nvim"),
+		filepath.Join(stateHome, "nvim", "shada"),
 		filepath.Join(configHome, "nvim", "lua"),
 		filepath.Join(configHome, "nvim", "lua", "plugins"),
 		filepath.Join(configHome, "nvim", "pack", "git-plugins", "opt"),
-		filepath.Join(home, ".cache", "nvim"),
-		filepath.Join(home, ".local", "state", "nvim"),
 	}
 	return check
 }
