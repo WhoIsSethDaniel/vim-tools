@@ -113,10 +113,12 @@ func main() {
 	}
 
 	// print out unused config files
-	fmt.Print("\nunused config files:\n")
 	unused := plugins.UnusedConfigFiles()
-	sort.Strings(unused)
-	for _, cf := range unused {
-		fmt.Printf("  %s\n", cf)
+	if len(unused) > 0 {
+		sort.Strings(unused)
+		fmt.Print("\nunused config files:\n")
+		for _, cf := range unused {
+			fmt.Printf("  %s\n", cf)
+		}
 	}
 }
