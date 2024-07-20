@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 
 	tools "github.com/WhoIsSethDaniel/vim-tools"
 )
@@ -109,5 +110,13 @@ func main() {
 		}
 	} else {
 		fmt.Print("all ok\n")
+	}
+
+	// print out unused config files
+	fmt.Print("\nunused config files:\n")
+	unused := plugins.UnusedConfigFiles()
+	sort.Strings(unused)
+	for _, cf := range unused {
+		fmt.Printf("  %s\n", cf)
 	}
 }

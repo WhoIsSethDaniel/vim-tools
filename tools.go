@@ -140,6 +140,36 @@ func (p Plugins) RebuildConfig() error {
 	return Filesys.Rename(allLuaPlugins.Name(), allPluginsPath)
 }
 
+func ConfigsOnDisk() map[string]bool {
+	ent, err := os.ReadDir(ConfigFileDir())
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Cannot read plugin directory: %s\n", err)
+		os.Exit(1)
+	}
+	configsOnDisk := make(map[string]bool)
+	for _, f := range ent {
+		if !f.IsDir() {
+			configsOnDisk[f.Name()] = true
+		}
+	}
+	return configsOnDisk
+}
+
+func (p Plugins) UnusedConfigFiles() []string {
+	names := p.SortedNames()
+	onDisk := ConfigsOnDisk()
+
+	for _, name := range names {
+		cf := p[name].ConfigFile
+		delete(onDisk, cf)
+	}
+	unused := []string{}
+	for cf := range onDisk {
+		unused = append(unused, cf)
+	}
+	return unused
+}
+
 // SortedNames ....
 func (p Plugins) SortedNames() []string {
 	sortedPlugins := make([]string, 0, len(p))
