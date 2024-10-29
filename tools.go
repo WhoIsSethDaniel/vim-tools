@@ -136,7 +136,7 @@ func (p Plugins) RebuildConfig() error {
 			}
 		}
 	}
-	fmt.Fprint(allLuaPlugins, "-- load plugins\n")
+	fmt.Fprint(allLuaPlugins, "\n-- load plugins\n")
 	fmt.Fprint(allLuaPlugins, "vim.cmd[[\n")
 	for _, name := range names {
 		plugin := p[name]
