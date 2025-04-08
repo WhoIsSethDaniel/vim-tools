@@ -16,8 +16,9 @@ import (
 )
 
 func main() {
-	var versionCheck bool
+	var versionCheck, showBranch bool
 	flag.BoolVar(&versionCheck, "v", false, "Check version of each installed plugin")
+	flag.BoolVar(&showBranch, "b", false, "Show the branch name that is being inspected")
 	flag.Parse()
 
 	plugins, err := tools.Read()
@@ -132,13 +133,17 @@ func main() {
 					errPrint <- fmt.Errorf("failed to find remote head for %s", pluginName)
 					return
 				}
+				outputString := pluginName
+				if showBranch {
+					outputString = fmt.Sprintf("%s [%s]", outputString, branch)
+				}
 				if lhead == rhead {
-					toPrint <- fmt.Sprintf("OK %s", pluginName)
+					toPrint <- fmt.Sprintf("OK %s", outputString)
 				} else {
 					if _, err := runGit(pluginName, "pull", "--rebase", remoteURL, branch); err != nil {
-						errPrint <- fmt.Errorf("ERROR %s", pluginName)
+						errPrint <- fmt.Errorf("ERROR %s", outputString)
 					} else {
-						toPrint <- fmt.Sprintf("UPDATED %s", pluginName)
+						toPrint <- fmt.Sprintf("UPDATED %s", outputString)
 					}
 				}
 			}(pluginName)
