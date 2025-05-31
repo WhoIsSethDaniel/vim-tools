@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -10,7 +9,6 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"time"
 
 	tools "github.com/WhoIsSethDaniel/vim-tools"
 )
@@ -41,18 +39,6 @@ func main() {
 		}
 	}
 
-	runGit := func(pluginName string, args ...string) (string, error) {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-		defer cancel()
-		cmd := exec.CommandContext(ctx, "git", args...)
-		cmd.Dir = filepath.Join(tools.PluginDir(), pluginName)
-		out, err := cmd.CombinedOutput()
-		if err != nil {
-			return "", fmt.Errorf("%s: failed to run git: %w", pluginName, err)
-		}
-		return strings.TrimRight(string(out), "\n"), nil
-	}
-
 	var wg sync.WaitGroup
 	toPrint := make(chan string)
 	errPrint := make(chan error)
@@ -60,41 +46,42 @@ func main() {
 	defer close(errPrint)
 
 	for _, pluginName := range args {
+		plugin := plugins[pluginName]
 		wg.Add(1)
 		if versionCheck {
-			go func(pluginName string) {
+			go func(plugin tools.Plugin) {
 				defer wg.Done()
-				out, err := runGit(pluginName, "rev-parse", "HEAD")
+				out, err := plugin.RunGit(plugin.Name, "rev-parse", "HEAD")
 				if err != nil {
 					errPrint <- err
 					return
 				}
-				toPrint <- fmt.Sprintf("%s %s", pluginName, out)
-			}(pluginName)
+				toPrint <- fmt.Sprintf("%s %s", plugin.Name, out)
+			}(plugin)
 		} else {
-			go func(pluginName string) {
+			go func(plugin tools.Plugin) {
 				defer wg.Done()
-				plugin := plugins[pluginName]
-				if _, err := os.Stat(filepath.Join(tools.PluginDir(), pluginName)); err != nil {
-					var cmd *exec.Cmd
-					if plugin.HasVersion() {
-						cmd = exec.Command("git", "clone", "--branch", plugin.Version, plugin.URL, plugin.Name) //nolint:gosec // not a function
-					} else {
-						cmd = exec.Command("git", "clone", plugin.URL, plugin.Name) //nolint:gosec // not a function
-					}
+				if _, err := os.Stat(filepath.Join(tools.PluginDir(), plugin.Name)); err != nil {
+					cmd := exec.Command("git", "clone", plugin.URL, plugin.Name) //nolint:gosec // not a function
 					cmd.Dir = tools.PluginDir()
 					out, err := cmd.CombinedOutput()
 					if err != nil {
-						errPrint <- fmt.Errorf("%s: failed to run git: %s: %w", pluginName, strings.TrimRight(string(out), "\n"), err)
+						errPrint <- fmt.Errorf("%s: failed to clone repo: %s: %w", plugin.Name, strings.TrimRight(string(out), "\n"), err)
 						return
 					}
-					toPrint <- fmt.Sprintf("CLONED %s", pluginName)
+					if plugin.HasVersion() {
+						if _, err := plugin.RunGit("reset", "--hard", plugin.Version); err != nil {
+							errPrint <- fmt.Errorf("%s: failed to reset repo: %s: %w", plugin.Name, strings.TrimRight(string(out), "\n"), err)
+							return
+						}
+					}
+					toPrint <- fmt.Sprintf("CLONED %s", plugin.Name)
 					return
 				}
 				var branch, symref string
 				switch plugin.Version {
 				case "":
-					symref, err = runGit(pluginName, "symbolic-ref", "HEAD")
+					symref, err = plugin.RunGit("symbolic-ref", "HEAD")
 					if err != nil {
 						errPrint <- err
 						return
@@ -103,12 +90,12 @@ func main() {
 				default:
 					branch = plugin.Version
 				}
-				lhead, err := runGit(pluginName, "rev-parse", "HEAD")
+				lhead, err := plugin.RunGit("rev-parse", "HEAD")
 				if err != nil {
 					errPrint <- err
 					return
 				}
-				rheadRefs, err := runGit(pluginName, "ls-remote", "--refs", plugin.URL, branch)
+				rheadRefs, err := plugin.RunGit("ls-remote", "--refs", plugin.URL, branch)
 				if err != nil {
 					errPrint <- err
 					return
@@ -119,7 +106,7 @@ func main() {
 				for _, ref := range rheads {
 					f := strings.Fields(ref)
 					if len(f) == 0 {
-						errPrint <- fmt.Errorf("ERROR %s: no remote heads found (possible change of primary branch?)", pluginName)
+						errPrint <- fmt.Errorf("ERROR %s: no remote heads found (possible change of primary branch?)", plugin.Name)
 						return
 					}
 					if symref != "" {
@@ -132,27 +119,27 @@ func main() {
 					}
 				}
 				if rhead == "" {
-					errPrint <- fmt.Errorf("failed to find remote head for %s", pluginName)
+					errPrint <- fmt.Errorf("failed to find remote head for %s", plugin.Name)
 					return
 				}
-				outputString := pluginName
+				outputString := plugin.Name
 				if showBranch {
 					outputString = fmt.Sprintf("%s [%s]", outputString, branch)
 				}
 				if lhead == rhead {
 					toPrint <- fmt.Sprintf("OK %s", outputString)
 				} else {
-					if _, err := runGit(pluginName, "pull", "--rebase", plugin.URL, branch); err != nil {
+					if _, err := plugin.RunGit("pull", "--rebase", plugin.URL, branch); err != nil {
 						errPrint <- fmt.Errorf("ERROR %s", outputString)
 					}
 					if plugin.HasVersion() {
-						if _, err := runGit(pluginName, "reset", "--hard", branch); err != nil {
+						if _, err := plugin.RunGit("reset", "--hard", branch); err != nil {
 							errPrint <- fmt.Errorf("ERROR %s", outputString)
 						}
 					}
 					toPrint <- fmt.Sprintf("UPDATED %s", outputString)
 				}
-			}(pluginName)
+			}(plugin)
 		}
 	}
 

@@ -1,13 +1,10 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"time"
 
 	tools "github.com/WhoIsSethDaniel/vim-tools"
 )
@@ -37,28 +34,28 @@ func main() {
 		os.Exit(1)
 	}
 
-	baseCtx := context.Background()
 	for _, arg := range flag.Args() {
+		plugin := plugins.Add(arg, name, version)
 		fmt.Print(" - cloning\n")
 
-		ctx, cancel := context.WithTimeout(baseCtx, 30*time.Second)
-		var git *exec.Cmd
-		if name == "" && version == "" {
-			git = exec.CommandContext(ctx, "git", "clone", arg)
-		} else if version != "" && name != "" {
-			git = exec.CommandContext(ctx, "git", "clone", "--branch", version, arg, name)
-		} else if version != "" {
-			git = exec.CommandContext(ctx, "git", "clone", "--branch", version, arg)
-		} else {
-			git = exec.CommandContext(ctx, "git", "clone", arg, name)
-		}
-		git.Dir = tools.PluginDir()
-		if _, err := git.Output(); err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to run git command: %s\n", err)
+		_, err := plugin.CloneRepo()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to clone repo: %s", err)
 			os.Exit(1)
 		}
-		cancel()
-		plugins.Add(arg, name, version)
+		if version != "" {
+			_, err = plugin.RunGit("reset", "--hard", plugin.Version)
+			if err != nil {
+				fmt.Fprintf(
+					os.Stderr,
+					"Failed to reset repo for %s to %s: %s",
+					plugin.Name,
+					plugin.Version,
+					err,
+				)
+				os.Exit(1)
+			}
+		}
 	}
 
 	fmt.Print(" - rewrite files\n")

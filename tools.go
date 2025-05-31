@@ -1,14 +1,17 @@
 package tools
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/spf13/afero"
 )
@@ -257,6 +260,26 @@ func (p Plugins) Write() error {
 		return fmt.Errorf("rename of plugins file failed: %w", err)
 	}
 	return nil
+}
+
+func (plugin *Plugin) CloneRepo() (string, error) {
+	return plugin.runGitFromDir(PluginDir(), "clone", plugin.URL)
+}
+
+func (plugin *Plugin) RunGit(args ...string) (string, error) {
+	return plugin.runGitFromDir(filepath.Join(PluginDir(), plugin.Name), args...)
+}
+
+func (plugin *Plugin) runGitFromDir(dir string, args ...string) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "git", args...)
+	cmd.Dir = dir
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("%s: failed to run git: %w", plugin.Name, err)
+	}
+	return strings.TrimRight(string(out), "\n"), nil
 }
 
 // ConfigFilePath ....
