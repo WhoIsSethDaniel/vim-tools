@@ -9,8 +9,9 @@ import (
 )
 
 func main() {
-	var listURL, showFlags bool
+	var listURL, listVersion, showFlags bool
 	flag.BoolVar(&listURL, "u", false, "List the repo URL along with the name")
+	flag.BoolVar(&listVersion, "v", false, "List the version the repo is frozen to, if any")
 	flag.BoolVar(
 		&showFlags,
 		"f",
@@ -39,7 +40,7 @@ func main() {
 		} else {
 			flags += " "
 		}
-		if plugin.IsFrozen() {
+		if plugin.HasVersion() {
 			flags += "F"
 		} else {
 			flags += " "
@@ -48,6 +49,9 @@ func main() {
 			fmt.Printf("%s  ", flags)
 		}
 		fmt.Print(name)
+		if listVersion && plugin.HasVersion() {
+			fmt.Printf(" [%s]", plugin.Version)
+		}
 		if listURL {
 			fmt.Printf(" [%s]", plugin.URL)
 		}

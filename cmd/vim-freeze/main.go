@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,17 +10,28 @@ import (
 )
 
 func main() {
+	var version string
+	flag.StringVar(&version, "v", "", "Freeze to a particular branch/tag")
+	flag.Parse()
+
 	plugins, _ := tools.Read()
-	if len(os.Args) <= 1 {
-		fmt.Fprintf(os.Stderr, "Usage: %s plugin [plugin ...]\n", filepath.Base(os.Args[0]))
+	if version == "" || flag.NArg() == 0 {
+		if version == "" {
+			fmt.Fprint(os.Stderr, "-v is required\n")
+		}
+		fmt.Fprintf(
+			os.Stderr,
+			"Usage: %s -v <branch/tag> plugin [plugin ...]\n",
+			filepath.Base(os.Args[0]),
+		)
 		os.Exit(1)
 	}
-	for _, arg := range os.Args[1:] {
+	for _, arg := range flag.Args() {
 		plugin, ok := plugins[arg]
 		if !ok {
 			fmt.Fprintf(os.Stderr, "cannot find %s\n", arg)
 		} else {
-			plugins[arg] = plugin.Freeze()
+			plugins[arg] = plugin.Freeze(version)
 		}
 	}
 

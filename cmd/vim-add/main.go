@@ -13,8 +13,9 @@ import (
 )
 
 func main() {
-	var name string
+	var name, version string
 	flag.StringVar(&name, "n", "", "Name for given URL (only one URL may be specified)")
+	flag.StringVar(&version, "v", "", "Version to freeze on")
 	flag.Parse()
 
 	if flag.NArg() == 0 {
@@ -23,6 +24,10 @@ func main() {
 	}
 	if name != "" && flag.NArg() > 1 {
 		fmt.Fprintf(os.Stderr, "When -n is provided only one URL may be given")
+		os.Exit(1)
+	}
+	if version != "" && flag.NArg() > 1 {
+		fmt.Fprintf(os.Stderr, "When -v is provided only one URL may be given")
 		os.Exit(1)
 	}
 
@@ -38,8 +43,12 @@ func main() {
 
 		ctx, cancel := context.WithTimeout(baseCtx, 30*time.Second)
 		var git *exec.Cmd
-		if name == "" {
+		if name == "" && version == "" {
 			git = exec.CommandContext(ctx, "git", "clone", arg)
+		} else if version != "" && name != "" {
+			git = exec.CommandContext(ctx, "git", "clone", "--branch", version, arg, name)
+		} else if version != "" {
+			git = exec.CommandContext(ctx, "git", "clone", "--branch", version, arg)
 		} else {
 			git = exec.CommandContext(ctx, "git", "clone", arg, name)
 		}
@@ -49,7 +58,7 @@ func main() {
 			os.Exit(1)
 		}
 		cancel()
-		plugins.Add(arg, name)
+		plugins.Add(arg, name, version)
 	}
 
 	fmt.Print(" - rewrite files\n")

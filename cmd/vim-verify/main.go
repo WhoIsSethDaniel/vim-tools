@@ -74,7 +74,7 @@ func main() {
 		if plugin.IsColorscheme() {
 			csPlugins++
 		}
-		if plugin.IsFrozen() {
+		if plugin.HasVersion() {
 			frozenPlugins++
 		}
 	}

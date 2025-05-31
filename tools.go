@@ -25,6 +25,7 @@ type Plugin struct {
 	Colorscheme bool   `json:"colorscheme"`
 	Enabled     bool   `json:"enabled"`
 	Frozen      bool   `json:"frozen"`
+	Version     string `json:"version"`
 }
 
 // Plugins ....
@@ -192,7 +193,7 @@ func (p Plugins) SortedNames() []string {
 }
 
 // Add ....
-func (p Plugins) Add(url, name string) Plugin {
+func (p Plugins) Add(url, name, version string) Plugin {
 	if name == "" {
 		name = filepath.Base(strings.Split(url, ":")[1])
 	}
@@ -201,6 +202,7 @@ func (p Plugins) Add(url, name string) Plugin {
 		URL:         url,
 		Enabled:     true,
 		Colorscheme: false,
+		Version:     version,
 	}
 	plugin.CleanName = strings.Map(func(c rune) rune {
 		if c == '.' {
@@ -264,14 +266,14 @@ func (plugin Plugin) ConfigFilePath() string {
 }
 
 // Freeze ....
-func (plugin Plugin) Freeze() Plugin {
-	plugin.Frozen = true
+func (plugin Plugin) Freeze(version string) Plugin {
+	plugin.Version = version
 	return plugin
 }
 
 // Thaw
 func (plugin Plugin) Thaw() Plugin {
-	plugin.Frozen = false
+	plugin.Version = ""
 	return plugin
 }
 
@@ -287,11 +289,6 @@ func (plugin Plugin) Enable() Plugin {
 	return plugin
 }
 
-// IsFrozen ....
-func (plugin Plugin) IsFrozen() bool {
-	return plugin.Frozen
-}
-
 // IsEnabled ....
 func (plugin Plugin) IsEnabled() bool {
 	return plugin.Enabled
@@ -305,4 +302,8 @@ func (plugin Plugin) IsDisabled() bool {
 // IsColorscheme ....
 func (plugin Plugin) IsColorscheme() bool {
 	return plugin.Colorscheme
+}
+
+func (plugin Plugin) HasVersion() bool {
+	return plugin.Version != ""
 }

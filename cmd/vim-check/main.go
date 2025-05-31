@@ -76,7 +76,12 @@ func main() {
 				defer wg.Done()
 				plugin := plugins[pluginName]
 				if _, err := os.Stat(filepath.Join(tools.PluginDir(), pluginName)); err != nil {
-					cmd := exec.Command("git", "clone", plugin.URL, plugin.Name) //nolint:gosec // not a function
+					var cmd *exec.Cmd
+					if plugin.HasVersion() {
+						cmd = exec.Command("git", "clone", "--branch", plugin.Version, plugin.URL, plugin.Name) //nolint:gosec // not a function
+					} else {
+						cmd = exec.Command("git", "clone", plugin.URL, plugin.Name) //nolint:gosec // not a function
+					}
 					cmd.Dir = tools.PluginDir()
 					out, err := cmd.CombinedOutput()
 					if err != nil {
@@ -86,36 +91,29 @@ func main() {
 					toPrint <- fmt.Sprintf("CLONED %s", pluginName)
 					return
 				}
-				if plugin.Frozen {
-					toPrint <- fmt.Sprintf("FROZEN %s", pluginName)
-					return
-				}
-				symref, err := runGit(pluginName, "symbolic-ref", "HEAD")
-				if err != nil {
-					errPrint <- err
-					return
-				}
-				branch := path.Base(symref)
-				remote, err := runGit(pluginName, "config", fmt.Sprintf("branch.%s.remote", branch))
-				if err != nil {
-					errPrint <- err
-					return
-				}
-				remoteURL, err := runGit(pluginName, "config", fmt.Sprintf("remote.%s.url", remote))
-				if err != nil {
-					errPrint <- err
-					return
+				var branch, symref string
+				switch plugin.Version {
+				case "":
+					symref, err = runGit(pluginName, "symbolic-ref", "HEAD")
+					if err != nil {
+						errPrint <- err
+						return
+					}
+					branch = path.Base(symref)
+				default:
+					branch = plugin.Version
 				}
 				lhead, err := runGit(pluginName, "rev-parse", "HEAD")
 				if err != nil {
 					errPrint <- err
 					return
 				}
-				rheadRefs, err := runGit(pluginName, "ls-remote", "--heads", remoteURL, branch)
+				rheadRefs, err := runGit(pluginName, "ls-remote", "--refs", plugin.URL, branch)
 				if err != nil {
 					errPrint <- err
 					return
 				}
+				// this logic is not always correct.
 				var rhead string
 				rheads := strings.Split(rheadRefs, "\n")
 				for _, ref := range rheads {
@@ -124,8 +122,12 @@ func main() {
 						errPrint <- fmt.Errorf("ERROR %s: no remote heads found (possible change of primary branch?)", pluginName)
 						return
 					}
-
-					if f[1] == symref {
+					if symref != "" {
+						if f[1] == symref {
+							rhead = f[0]
+							break
+						}
+					} else {
 						rhead = f[0]
 					}
 				}
@@ -140,11 +142,15 @@ func main() {
 				if lhead == rhead {
 					toPrint <- fmt.Sprintf("OK %s", outputString)
 				} else {
-					if _, err := runGit(pluginName, "pull", "--rebase", remoteURL, branch); err != nil {
+					if _, err := runGit(pluginName, "pull", "--rebase", plugin.URL, branch); err != nil {
 						errPrint <- fmt.Errorf("ERROR %s", outputString)
-					} else {
-						toPrint <- fmt.Sprintf("UPDATED %s", outputString)
 					}
+					if plugin.HasVersion() {
+						if _, err := runGit(pluginName, "reset", "--hard", branch); err != nil {
+							errPrint <- fmt.Errorf("ERROR %s", outputString)
+						}
+					}
+					toPrint <- fmt.Sprintf("UPDATED %s", outputString)
 				}
 			}(pluginName)
 		}

@@ -23,7 +23,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Cannot find plugin %s", name)
 	}
 	oldConfig := plugin.ConfigFilePath()
-	plugins.Add(plugin.URL, newName)
+	plugins.Add(plugin.URL, newName, "")
 	delete(plugins, name)
 
 	fmt.Print(" - rename plugin dir\n")
