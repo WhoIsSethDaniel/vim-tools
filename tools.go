@@ -24,7 +24,6 @@ type Plugin struct {
 	ConfigFile  string `json:"config_file"`
 	Colorscheme bool   `json:"colorscheme"`
 	Enabled     bool   `json:"enabled"`
-	Frozen      bool   `json:"frozen"`
 	Version     string `json:"version"`
 }
 
