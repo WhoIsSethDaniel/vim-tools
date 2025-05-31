@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"strings"
@@ -14,8 +13,8 @@ import (
 )
 
 func main() {
-	var versionCheck, showBranch bool
-	flag.BoolVar(&versionCheck, "v", false, "Check version of each installed plugin")
+	var hashCheck, showBranch bool
+	flag.BoolVar(&hashCheck, "hash", false, "Check hash of each installed plugin")
 	flag.BoolVar(&showBranch, "b", false, "Show the branch name that is being inspected")
 	flag.Parse()
 
@@ -48,10 +47,10 @@ func main() {
 	for _, pluginName := range args {
 		plugin := plugins[pluginName]
 		wg.Add(1)
-		if versionCheck {
+		if hashCheck {
 			go func(plugin tools.Plugin) {
 				defer wg.Done()
-				out, err := plugin.RunGit(plugin.Name, "rev-parse", "HEAD")
+				out, err := plugin.RunGit("rev-parse", "HEAD")
 				if err != nil {
 					errPrint <- err
 					return
@@ -62,16 +61,14 @@ func main() {
 			go func(plugin tools.Plugin) {
 				defer wg.Done()
 				if _, err := os.Stat(filepath.Join(tools.PluginDir(), plugin.Name)); err != nil {
-					cmd := exec.Command("git", "clone", plugin.URL, plugin.Name) //nolint:gosec // not a function
-					cmd.Dir = tools.PluginDir()
-					out, err := cmd.CombinedOutput()
+					out, err := plugin.CloneRepo()
 					if err != nil {
-						errPrint <- fmt.Errorf("%s: failed to clone repo: %s: %w", plugin.Name, strings.TrimRight(string(out), "\n"), err)
+						errPrint <- fmt.Errorf("%s: failed to clone repo: %s: %w", plugin.Name, strings.TrimRight(out, "\n"), err)
 						return
 					}
 					if plugin.HasVersion() {
 						if _, err := plugin.RunGit("reset", "--hard", plugin.Version); err != nil {
-							errPrint <- fmt.Errorf("%s: failed to reset repo: %s: %w", plugin.Name, strings.TrimRight(string(out), "\n"), err)
+							errPrint <- fmt.Errorf("%s: failed to reset repo: %s: %w", plugin.Name, strings.TrimRight(out, "\n"), err)
 							return
 						}
 					}
