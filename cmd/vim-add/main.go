@@ -35,7 +35,27 @@ func main() {
 	}
 
 	for _, arg := range flag.Args() {
-		plugins.Add(arg, name, version)
+		plugin := plugins.Add(arg, name, version)
+		fmt.Print(" - cloning\n")
+
+		_, err := plugin.CloneRepo()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to clone repo: %s", err)
+			os.Exit(1)
+		}
+		if version != "" {
+			_, err = plugin.RunGit("reset", "--hard", plugin.Version)
+			if err != nil {
+				fmt.Fprintf(
+					os.Stderr,
+					"Failed to reset repo for %s to %s: %s",
+					plugin.Name,
+					plugin.Version,
+					err,
+				)
+				os.Exit(1)
+			}
+		}
 	}
 
 	fmt.Print(" - rewrite files\n")
