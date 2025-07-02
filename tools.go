@@ -139,17 +139,17 @@ func (p Plugins) RebuildConfig() error {
 			}
 		}
 	}
-	fmt.Fprint(allLuaPlugins, "\n-- load plugins\n")
-	fmt.Fprint(allLuaPlugins, "vim.cmd[[\n")
-	for _, name := range names {
-		plugin := p[name]
-		if plugin.IsDisabled() {
-			fmt.Fprintf(allLuaPlugins, "\" packadd %s\n", plugin.Name)
-		} else {
-			fmt.Fprintf(allLuaPlugins, "packadd %s\n", plugin.Name)
-		}
-	}
-	fmt.Fprint(allLuaPlugins, "]]\n")
+	// fmt.Fprint(allLuaPlugins, "\n-- load plugins\n")
+	// fmt.Fprint(allLuaPlugins, "vim.cmd[[\n")
+	// for _, name := range names {
+	// 	plugin := p[name]
+	// 	if plugin.IsDisabled() {
+	// 		fmt.Fprintf(allLuaPlugins, "\" packadd %s\n", plugin.Name)
+	// 	} else {
+	// 		fmt.Fprintf(allLuaPlugins, "packadd %s\n", plugin.Name)
+	// 	}
+	// }
+	// fmt.Fprint(allLuaPlugins, "]]\n")
 
 	return Filesys.Rename(allLuaPlugins.Name(), allPluginsPath)
 }
