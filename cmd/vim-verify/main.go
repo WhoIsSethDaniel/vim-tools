@@ -50,7 +50,7 @@ func dirsToCheck() []string {
 		filepath.Join(stateHome, "nvim", "shada"),
 		filepath.Join(configHome, "nvim", "lua"),
 		filepath.Join(configHome, "nvim", "lua", "plugins"),
-		filepath.Join(configHome, "nvim", "pack", "git-plugins", "opt"),
+		filepath.Join(dataHome, "nvim", "site", "pack", "git-plugins", "opt"),
 	}
 	return check
 }

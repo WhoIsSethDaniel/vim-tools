@@ -44,13 +44,13 @@ func MetadataDir() string {
 
 // PluginDir ....
 func PluginDir() string {
-	configHome, ok := os.LookupEnv("XDG_CONFIG_HOME")
+	configHome, ok := os.LookupEnv("XDG_DATA_HOME")
 	if !ok {
-		panic("XDG_CONFIG_HOME must be set.")
+		panic("XDG_DATA_HOME must be set.")
 	}
 	return filepath.Join(
 		configHome,
-		"nvim", "pack", "git-plugins", "opt",
+		"nvim", "site", "pack", "core", "opt",
 	)
 }
 
@@ -112,7 +112,7 @@ func (p Plugins) RebuildConfig() error {
 		if plugin.IsDisabled() {
 			fmt.Fprintf(allLuaPlugins, "\\%s\n", plugin.URL)
 		} else {
-			fmt.Fprintf(allLuaPlugins, "%s\n", plugin.URL)
+			fmt.Fprintf(allLuaPlugins, "  {\n    src = '%s',\n  },\n", plugin.URL)
 		}
 	}
 	fmt.Fprint(allLuaPlugins, "})\n\n")
