@@ -106,18 +106,17 @@ func (p Plugins) RebuildConfig() error {
 	defer allLuaPlugins.Close()
 	defer Filesys.Remove(allLuaPlugins.Name())
 
-	fmt.Fprint(allLuaPlugins, "-- add plugin to rtp\n")
-	fmt.Fprint(allLuaPlugins, "vim.cmd[[\n")
+	fmt.Fprint(allLuaPlugins, "vim.pack.add({\n")
 	for _, name := range names {
 		plugin := p[name]
 		if plugin.IsDisabled() {
-			fmt.Fprintf(allLuaPlugins, "\" packadd! %s\n", plugin.Name)
+			fmt.Fprintf(allLuaPlugins, "\\%s\n", plugin.URL)
 		} else {
-			fmt.Fprintf(allLuaPlugins, "packadd! %s\n", plugin.Name)
+			fmt.Fprintf(allLuaPlugins, "%s\n", plugin.URL)
 		}
 	}
-	fmt.Fprint(allLuaPlugins, "]]\n")
-	fmt.Fprint(allLuaPlugins, "\n-- colorscheme\n")
+	fmt.Fprint(allLuaPlugins, "})\n\n")
+	fmt.Fprint(allLuaPlugins, "-- colorscheme\n")
 	for _, name := range names {
 		plugin := p[name]
 		if plugin.Colorscheme && plugin.IsEnabled() {
@@ -139,17 +138,6 @@ func (p Plugins) RebuildConfig() error {
 			}
 		}
 	}
-	// fmt.Fprint(allLuaPlugins, "\n-- load plugins\n")
-	// fmt.Fprint(allLuaPlugins, "vim.cmd[[\n")
-	// for _, name := range names {
-	// 	plugin := p[name]
-	// 	if plugin.IsDisabled() {
-	// 		fmt.Fprintf(allLuaPlugins, "\" packadd %s\n", plugin.Name)
-	// 	} else {
-	// 		fmt.Fprintf(allLuaPlugins, "packadd %s\n", plugin.Name)
-	// 	}
-	// }
-	// fmt.Fprint(allLuaPlugins, "]]\n")
 
 	return Filesys.Rename(allLuaPlugins.Name(), allPluginsPath)
 }
